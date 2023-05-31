@@ -1,0 +1,59 @@
+image: node:14.16.0
+
+
+workflow:
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - when: always
+
+
+# These operations run before every job
+before_script:
+  # Display some information about the runner setup
+  - uname -a
+  - npm -v
+  - node -v
+  - git status
+  - git log -1
+
+
+stages:
+  - tag
+
+# Create the version tag
+generate_tag:
+  stage: tag
+  before_script:
+    - uname -a
+    - git status
+    - git log -1
+  script:
+    - cd $CI_PROJECT_DIR
+    - >
+      if [ `git tag -l --points-at HEAD | wc -l` -eq 0 ]; then
+        mkdir -p ~/.ssh && chmod 700 ~/.ssh
+        HOST_URL=`echo $CI_REPOSITORY_URL | sed -r 's/.+@([^/]+)\/.*/\1/'`
+        ssh-keyscan "$HOST_URL" >> ~/.ssh/known_hosts && chmod 644 ~/.ssh/known_hosts
+        eval $(ssh-agent -s)
+        ssh-add <(echo "$SSH_PRIVATE_KEY")
+        git describe --tag --abbrev=0
+        NEW_URL=`echo $CI_REPOSITORY_URL | sed -r 's/.+@([^/]+)\//git@\1:/'`
+        echo $NEW_URL
+        git remote set-url --push origin $NEW_URL
+        VERSION=`git describe --tag --abbrev=0`
+        echo $VERSION
+        MAJOR=`echo $VERSION | sed -e 's/\..*//' | sed -e 's/v//'`
+        MINOR=`echo $VERSION | sed -r 's/^v?([0-9]*?)\.//' | sed -r 's/\..*//'`
+        PATCH=`echo $VERSION | sed -e 's/.*\.//'`
+        PATCH=$((PATCH+1))
+        echo v$MAJOR.$MINOR.$PATCH
+        git tag v$MAJOR.$MINOR.$PATCH
+        git push origin v$MAJOR.$MINOR.$PATCH
+      else
+        echo "No need to tag version"
+      fi
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push"  && $TAG == "true" && $CI_COMMIT_BRANCH == "master"'
+      when: always
+    - when: never

@@ -1,0 +1,33 @@
+
+.amplify-tabs {
+  display: none !important;
+}
+
+div[data-amplify-container] {
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--box-shadow, 1px 1px 4px 0 rgba(0, 0, 0, 0.15));
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+[data-amplify-authenticator] {
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+[data-amplify-authenticator] [data-amplify-router] {
+  background-color: var(--amplify-components-authenticator-router-background-color);
+  box-shadow: unset;
+  border-color: unset;
+  border-width: unset;
+  border-style: unset;
+}
+
+[data-amplify-footer]{
+  display: none;
+}
+
